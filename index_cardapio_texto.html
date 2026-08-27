@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabor da Casa - Atendimento</title>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #d9dbd5;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chat-container {
+    width: 100%;
+    max-width: 500px;
+    height: 100vh;
+    max-height: 850px;
+    background: #efeae2;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-header {
+    background: #075e54;
+    color: white;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.restaurant-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 25px;
+}
+
+.restaurant-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.restaurant-name {
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.restaurant-status {
+    font-size: 13px;
+    margin-top: 3px;
+    opacity: 0.9;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background-color: #efeae2;
+    background-image: radial-gradient(#d8d1c8 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.message {
+    max-width: 80%;
+    padding: 8px 10px 6px;
+    border-radius: 8px;
+    position: relative;
+    font-size: 15px;
+    line-height: 1.4;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.message.received {
+    align-self: flex-start;
+    background: #ffffff;
+    border-top-left-radius: 2px;
+}
+
+.message.sent {
+    align-self: flex-end;
+    background: #d9fdd3;
+    border-top-right-radius: 2px;
+}
+
+.message-time {
+    font-size: 10px;
+    color: #667781;
+    float: right;
+    margin-left: 8px;
+    margin-top: 5px;
+}
+
+.typing {
+    align-self: flex-start;
+    background: white;
+    padding: 10px 14px;
+    border-radius: 8px;
+    display: none;
+    color: #667781;
+    font-size: 13px;
+}
+
+.typing.active { display: block; }
+
+.typing-dots span {
+    display: inline-block;
+    animation: blink 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
+}
+
+.chat-input-area {
+    background: #f0f2f5;
+    padding: 10px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.message-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    border-radius: 22px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-family: inherit;
+    max-height: 120px;
+    min-height: 44px;
+    background: white;
+}
+
+.send-button {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: #075e54;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    transition: 0.2s;
+    flex-shrink: 0;
+}
+
+.send-button:hover { background: #064c44; }
+
+.send-button:disabled {
+    background: #9ca9a7;
+    cursor: not-allowed;
+}
+
+.error-message {
+    align-self: center;
+    background: #ffe5e5;
+    color: #a00000;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    display: none;
+    max-width: 90%;
+    text-align: center;
+}
+
+.error-message.active { display: block; }
+
+@media (max-width: 600px) {
+    body { align-items: stretch; }
+    .chat-container { max-height: none; }
+    .chat-header { height: 65px; }
+    .message { max-width: 85%; }
+}
+</style>
+</head>
+
+<body>
+<div class="chat-container">
+
+    <header class="chat-header">
+        <div class="restaurant-icon">🍕</div>
+        <div class="restaurant-info">
+            <div class="restaurant-name">Sabor da Casa</div>
+            <div class="restaurant-status">Atendimento automático</div>
+        </div>
+    </header>
+
+    <main class="chat-messages" id="chatMessages">
+        <div class="message received welcome-message">
+            Olá! 👋<br>
+            Bem-vindo à Pizzaria Sabor da Casa! 🍕<br><br>
+
+            <strong>Confira nosso cardápio:</strong><br><br>
+
+            🍕 <strong>PIZZAS</strong><br>
+            • Calabresa — Média R$ 35 | Grande R$ 45<br>
+            • Quatro Queijos — Média R$ 38 | Grande R$ 48<br>
+            • Frango com Catupiry — Média R$ 38 | Grande R$ 48<br>
+            • Portuguesa — Média R$ 39 | Grande R$ 49<br>
+            • Marguerita — Média R$ 35 | Grande R$ 45<br>
+            • Pepperoni — Média R$ 40 | Grande R$ 50<br><br>
+
+            🥤 <strong>BEBIDAS</strong><br>
+            • Coca-Cola 350ml — R$ 6<br>
+            • Coca-Cola 2L — R$ 12<br>
+            • Guaraná 2L — R$ 10<br>
+            • Fanta Laranja 2L — R$ 10<br>
+            • Água mineral 500ml — R$ 3<br><br>
+
+            🍕 <strong>COMBOS</strong><br>
+            • Combo 1 — R$ 55<br>
+            • Combo 2 — R$ 82<br>
+            • Combo Família — R$ 110<br><br>
+
+            É só me dizer o que você gostaria de pedir. 😊
+            <span class="message-time">agora</span>
+        </div>
+
+        <div class="typing" id="typingIndicator">
+            Sabor da Casa está digitando
+            <span class="typing-dots">
+                <span>.</span><span>.</span><span>.</span>
+            </span>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            Não foi possível conectar ao atendimento.
+            <br>
+            Verifique o webhook do n8n e tente novamente.
+        </div>
+    </main>
+
+    <form class="chat-input-area" id="chatForm">
+        <textarea
+            id="messageInput"
+            class="message-input"
+            placeholder="Digite seu pedido..."
+            rows="1"
+            autocomplete="off"
+        ></textarea>
+
+        <button
+            type="submit"
+            class="send-button"
+            id="sendButton"
+            title="Enviar"
+        >➤</button>
+    </form>
+
+</div>
+
+<script>
+/*
+ * CONFIGURAÇÃO
+ *
+ * Webhook de produção do n8n.
+ */
+const WEBHOOK_URL =
+    "https://laelison25.app.n8n.cloud/webhook/pedido-pizzaria";
+
+const CLIENT_NAME = "Cliente";
+
+const chatForm = document.getElementById("chatForm");
+const messageInput = document.getElementById("messageInput");
+const chatMessages = document.getElementById("chatMessages");
+const typingIndicator = document.getElementById("typingIndicator");
+const errorMessage = document.getElementById("errorMessage");
+const sendButton = document.getElementById("sendButton");
+
+function getCurrentTime() {
+    return new Date().toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+function scrollToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function showTyping() {
+    typingIndicator.classList.add("active");
+    scrollToBottom();
+}
+
+function hideTyping() {
+    typingIndicator.classList.remove("active");
+}
+
+function showError(text) {
+    errorMessage.innerHTML = text;
+    errorMessage.classList.add("active");
+    scrollToBottom();
+
+    setTimeout(() => {
+        errorMessage.classList.remove("active");
+    }, 7000);
+}
+
+function addMessage(text, type) {
+    const message = document.createElement("div");
+    message.className = "message " + type;
+
+    const textElement = document.createElement("span");
+    textElement.textContent = text;
+
+    const timeElement = document.createElement("span");
+    timeElement.className = "message-time";
+    timeElement.textContent = getCurrentTime();
+
+    message.appendChild(textElement);
+    message.appendChild(timeElement);
+
+    chatMessages.insertBefore(message, typingIndicator);
+    scrollToBottom();
+}
+
+/*
+ * Extrai uma resposta legível de diferentes formatos
+ * que o n8n pode devolver.
+ */
+function extractResponse(data) {
+    if (data === null || data === undefined) {
+        return "";
+    }
+
+    if (typeof data === "string") {
+        return data;
+    }
+
+    if (Array.isArray(data)) {
+        if (data.length === 0) return "";
+        return extractResponse(data[0]);
+    }
+
+    if (typeof data === "object") {
+        const possibleFields = [
+            "resposta",
+            "response",
+            "mensagem",
+            "message",
+            "texto",
+            "text",
+            "output",
+            "answer",
+            "content"
+        ];
+
+        for (const field of possibleFields) {
+            if (data[field] !== undefined && data[field] !== null) {
+                const value = extractResponse(data[field]);
+                if (value) return value;
+            }
+        }
+
+        return JSON.stringify(data, null, 2);
+    }
+
+    return String(data);
+}
+
+async function sendMessage(message) {
+    addMessage(message, "sent");
+
+    sendButton.disabled = true;
+    messageInput.disabled = true;
+    showTyping();
+
+    try {
+        /*
+         * IMPORTANTE:
+         * mode: "cors" permite a chamada normal do navegador.
+         */
+        const response = await fetch(WEBHOOK_URL, {
+            method: "POST",
+            mode: "cors",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json, text/plain, */*"
+            },
+            body: JSON.stringify({
+                nome: CLIENT_NAME,
+                mensagem: message
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(
+                "O n8n respondeu com HTTP " + response.status
+            );
+        }
+
+        const contentType = response.headers.get("content-type") || "";
+        let data;
+
+        if (contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            data = await response.text();
+        }
+
+        hideTyping();
+
+        const responseText = extractResponse(data);
+
+        if (responseText.trim()) {
+            addMessage(responseText, "received");
+        } else {
+            addMessage(
+                "Pedido recebido com sucesso! 👍",
+                "received"
+            );
+        }
+
+    } catch (error) {
+        console.error("Erro ao enviar pedido:", error);
+
+        hideTyping();
+
+        /*
+         * Mostra uma mensagem útil em vez de simplesmente
+         * falhar silenciosamente.
+         */
+        if (error instanceof TypeError) {
+            showError(
+                "<strong>Erro de conexão.</strong><br>" +
+                "O navegador não conseguiu acessar o webhook do n8n.<br>" +
+                "Isso normalmente indica CORS ou webhook inativo."
+            );
+        } else {
+            showError(
+                "<strong>Erro no atendimento.</strong><br>" +
+                escapeHtml(error.message)
+            );
+        }
+
+        addMessage(
+            "Não consegui enviar seu pedido ao atendimento. 😕",
+            "received"
+        );
+
+    } finally {
+        sendButton.disabled = false;
+        messageInput.disabled = false;
+        messageInput.focus();
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+chatForm.addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const message = messageInput.value.trim();
+
+    if (!message) return;
+
+    messageInput.value = "";
+    messageInput.style.height = "auto";
+
+    sendMessage(message);
+});
+
+messageInput.addEventListener("keydown", function(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        chatForm.requestSubmit();
+    }
+});
+
+messageInput.addEventListener("input", function() {
+    this.style.height = "auto";
+    this.style.height = Math.min(this.scrollHeight, 120) + "px";
+});
+
+scrollToBottom();
+messageInput.focus();
+</script>
+
+</body>
+</html>
